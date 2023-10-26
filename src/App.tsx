@@ -2,11 +2,11 @@ import './App.css'
 import useInternetSpeed from './components/useInternetSpeed'
 
 function App() {
-  const { speed, intervalSetter } = useInternetSpeed()
+  const { speed, intervalHandler } = useInternetSpeed()
   return (
     <>
-      <button onClick={() => intervalSetter()}>
-        speed is {speed}
+      <button onClick={() => intervalHandler()}>
+        speed is <strong>{speed}</strong> Mbps
       </button>
     </>
   )

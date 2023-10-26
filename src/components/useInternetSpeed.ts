@@ -1,39 +1,43 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
+
+const ITERATIONS = 15
+const PING_URL = 'https://source.unsplash.com/random?topics=nature'
 
 const useInternetSpeed = () => {
   const [speed, setSpeed] = useState<number>(0)
+  const intervalRunning = useRef(false)
 
   const checkInternetSpeed = async () => {
 
     const startTime = new Date().getTime()
-    let endTime: number;
     let imageSize: number = 0;
+    let speedInMbps = 0;
 
-    const imageLink = "https://source.unsplash.com/random?topics=nature";
-    await fetch(imageLink).then((response) => {
+    await fetch(PING_URL).then((response) => {
       imageSize = Number(response.headers.get("content-length")) ?? 0;
-      endTime = new Date().getTime();
       calculateSpeed();
     });
 
-
     function calculateSpeed() {
-      const timeDuration = (endTime - startTime) / 1000;
+      const timeDuration = (new Date().getTime() - startTime) / 1000;
       const loadedBits = imageSize * 8;
-      const speedInBps = Number((loadedBits / timeDuration).toFixed(2));
-      const speedInKbps = Number((speedInBps / 1024).toFixed(2));
-      const speedInMbps = Number((speedInKbps / 1024).toFixed(2));
+      speedInMbps = Number((loadedBits / (1024 * 1024 * timeDuration)).toFixed(2));
       setSpeed(speedInMbps)
     }
-
+    return speedInMbps
   }
-  const intervalSetter = async () => {
-    for (let i = 0; i < 20; i++) {
-      await checkInternetSpeed()
+
+  const intervalHandler = async () => {
+    intervalRunning.current = !intervalRunning.current
+    let accumulatedSpeed = 0
+    for (let i = 0; (i < ITERATIONS) && intervalRunning.current; i++) {
+      const speedInMbps = await checkInternetSpeed()
+      accumulatedSpeed += speedInMbps
     }
+    setSpeed(Number((accumulatedSpeed / ITERATIONS).toFixed(2)))
   }
 
-  return { speed, intervalSetter }
+  return { speed, intervalHandler }
 
 }
 
